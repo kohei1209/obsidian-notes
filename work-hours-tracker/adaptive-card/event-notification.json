@@ -1,0 +1,116 @@
+{
+  "_comment": [
+    "このファイルはAdaptive Cardの静的テンプレートです。",
+    "Power Automateフロー内で 'actions' 配列にプロジェクトボタンを動的に追加します。",
+    "Power Automateの式: ${eventTitle} 等のプレースホルダーはPower Automateの動的コンテンツに置換してください。",
+    "Adaptive Card Designerでのプレビュー: https://adaptivecards.io/designer/"
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "📅 新しい予定が追加されました",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Accent",
+          "wrap": true
+        }
+      ]
+    },
+    {
+      "type": "FactSet",
+      "spacing": "Medium",
+      "facts": [
+        {
+          "title": "予定名",
+          "value": "${eventTitle}"
+        },
+        {
+          "title": "開始日時",
+          "value": "${startDateTime}"
+        },
+        {
+          "title": "終了日時",
+          "value": "${endDateTime}"
+        },
+        {
+          "title": "時間",
+          "value": "${durationHours} 時間"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "どのプロジェクトの工数ですか？",
+      "weight": "Bolder",
+      "spacing": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "※ 24時間以内に選択してください。期限を過ぎると自動的にスキップされます。",
+      "size": "Small",
+      "color": "Warning",
+      "isSubtle": true,
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "_comment": "以下はPower Automateで動的に生成されるプロジェクトボタンのサンプルです。",
+      "_comment2": "Power Automateの Apply to each + アレイへの追加 アクションで actions 配列を構築してください。",
+      "type": "Action.Submit",
+      "title": "プロジェクトA",
+      "style": "positive",
+      "data": {
+        "action": "select_project",
+        "projectCode": "proj_a",
+        "projectName": "プロジェクトA",
+        "eventId": "${eventId}",
+        "eventTitle": "${eventTitle}",
+        "startDateTime": "${startDateTime}",
+        "endDateTime": "${endDateTime}",
+        "durationHours": "${durationHours}"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "⏭ スキップ（工数対象外）",
+      "style": "destructive",
+      "data": {
+        "action": "skip",
+        "eventId": "${eventId}"
+      }
+    }
+  ],
+  "_powerAutomateInstructions": {
+    "step1": "SharePointの Projects リストから IsActive=true の項目を全件取得する",
+    "step2": "変数 'actionsArray' を空のアレイで初期化する",
+    "step3": "Apply to each で Projects の各行をループし、以下のオブジェクトを actionsArray に追加する",
+    "step3_item": {
+      "type": "Action.Submit",
+      "title": "@{items('Apply_to_each')?['Title']}",
+      "style": "positive",
+      "data": {
+        "action": "select_project",
+        "projectCode": "@{items('Apply_to_each')?['ProjectCode']}",
+        "projectName": "@{items('Apply_to_each')?['Title']}",
+        "eventId": "@{triggerBody()?['id']}",
+        "eventTitle": "@{triggerBody()?['subject']}",
+        "startDateTime": "@{triggerBody()?['start']}",
+        "endDateTime": "@{triggerBody()?['end']}",
+        "durationHours": "@{variables('DurationHours')}"
+      }
+    },
+    "step4": "スキップボタンを actionsArray に追加する",
+    "step5": "Compose アクションで完成した Adaptive Card JSON を構築する",
+    "step5_expression": "{\n  \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n  \"type\": \"AdaptiveCard\",\n  \"version\": \"1.4\",\n  \"body\": [...],\n  \"actions\": @{variables('actionsArray')}\n}",
+    "step6": "Teams: アダプティブカードをチャットまたはチャネルに投稿して応答を待つ"
+  }
+}
