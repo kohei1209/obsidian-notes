@@ -18,10 +18,22 @@
       margin-bottom: 4px;
       color: #1a1a2e;
     }
-    .generated-at {
-      font-size: 0.8rem;
-      color: #888;
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
       margin-bottom: 24px;
+      font-size: 0.82rem;
+      color: #888;
+      flex-wrap: wrap;
+    }
+    .fy-badge {
+      background: #0078d4;
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
     .grid {
       display: grid;
@@ -44,11 +56,18 @@
       align-items: center;
       gap: 8px;
     }
+    .card-subtitle {
+      font-size: 0.75rem;
+      color: #999;
+      margin-left: auto;
+      font-weight: normal;
+    }
     /* 期間タブ */
     .period-tabs {
       display: flex;
       gap: 8px;
       margin-bottom: 16px;
+      flex-wrap: wrap;
     }
     .period-tab {
       padding: 6px 16px;
@@ -56,7 +75,7 @@
       border-radius: 20px;
       background: #f5f5f5;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       transition: all 0.2s;
     }
     .period-tab.active {
@@ -93,6 +112,7 @@
       height: 12px;
       border-radius: 50%;
       margin-right: 6px;
+      flex-shrink: 0;
     }
     /* 棒グラフ期間切替 */
     .bar-selector {
@@ -113,6 +133,7 @@
       justify-content: space-between;
       margin-bottom: 6px;
       font-size: 0.85rem;
+      align-items: baseline;
     }
     .progress-bar-bg {
       background: #e9ecef;
@@ -125,7 +146,8 @@
       border-radius: 8px;
       transition: width 0.4s ease;
     }
-    .progress-over { background: #e74c3c; }
+    .progress-over { background: #e74c3c !important; }
+    .progress-warn { background: #f39c12 !important; }
     /* ログテーブル */
     .log-table {
       width: 100%;
@@ -155,6 +177,11 @@
     }
     .full-width { grid-column: 1 / -1; }
     canvas { max-height: 280px; }
+    .fy-note {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 6px;
+    }
   </style>
 
   <!-- =====================================================
@@ -165,66 +192,24 @@
   <script>
     // Power Automate が置換するデータ（プレースホルダー: /* LOGS_DATA_JSON */ など）
     const WORK_LOGS = /* LOGS_DATA_JSON */[
-      {
-        "Title": "週次定例ミーティング",
-        "EventId": "sample_001",
-        "StartDateTime": "2026-03-10T10:00:00",
-        "EndDateTime": "2026-03-10T11:00:00",
-        "DurationHours": 1,
-        "ProjectCode": "proj_a",
-        "ProjectName": "プロジェクトA",
-        "RecordedAt": "2026-03-10T10:05:00"
-      },
-      {
-        "Title": "要件定義レビュー",
-        "EventId": "sample_002",
-        "StartDateTime": "2026-03-11T13:00:00",
-        "EndDateTime": "2026-03-11T15:00:00",
-        "DurationHours": 2,
-        "ProjectCode": "proj_b",
-        "ProjectName": "プロジェクトB",
-        "RecordedAt": "2026-03-11T13:05:00"
-      },
-      {
-        "Title": "設計書レビュー",
-        "EventId": "sample_003",
-        "StartDateTime": "2026-03-12T10:00:00",
-        "EndDateTime": "2026-03-12T11:30:00",
-        "DurationHours": 1.5,
-        "ProjectCode": "proj_a",
-        "ProjectName": "プロジェクトA",
-        "RecordedAt": "2026-03-12T10:05:00"
-      },
-      {
-        "Title": "クライアント打ち合わせ",
-        "EventId": "sample_004",
-        "StartDateTime": "2026-03-13T14:00:00",
-        "EndDateTime": "2026-03-13T15:00:00",
-        "DurationHours": 1,
-        "ProjectCode": "proj_c",
-        "ProjectName": "プロジェクトC",
-        "RecordedAt": "2026-03-13T14:05:00"
-      },
-      {
-        "Title": "スプリント計画",
-        "EventId": "sample_005",
-        "StartDateTime": "2026-02-28T09:00:00",
-        "EndDateTime": "2026-02-28T11:00:00",
-        "DurationHours": 2,
-        "ProjectCode": "proj_b",
-        "ProjectName": "プロジェクトB",
-        "RecordedAt": "2026-02-28T09:05:00"
-      },
-      {
-        "Title": "月次報告資料作成",
-        "EventId": "sample_006",
-        "StartDateTime": "2026-02-25T15:00:00",
-        "EndDateTime": "2026-02-25T17:00:00",
-        "DurationHours": 2,
-        "ProjectCode": "proj_a",
-        "ProjectName": "プロジェクトA",
-        "RecordedAt": "2026-02-25T15:05:00"
-      }
+      // ── 今年度（FY2025: 2025/04〜2026/03）サンプル ──
+      { "Title": "週次定例ミーティング",   "EventId": "s001", "StartDateTime": "2026-03-10T10:00:00", "EndDateTime": "2026-03-10T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "要件定義レビュー",       "EventId": "s002", "StartDateTime": "2026-03-11T13:00:00", "EndDateTime": "2026-03-11T15:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
+      { "Title": "設計書レビュー",         "EventId": "s003", "StartDateTime": "2026-03-12T10:00:00", "EndDateTime": "2026-03-12T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "クライアント打ち合わせ", "EventId": "s004", "StartDateTime": "2026-03-13T14:00:00", "EndDateTime": "2026-03-13T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
+      { "Title": "スプリント計画",         "EventId": "s005", "StartDateTime": "2026-02-28T09:00:00", "EndDateTime": "2026-02-28T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
+      { "Title": "月次報告資料作成",       "EventId": "s006", "StartDateTime": "2026-02-25T15:00:00", "EndDateTime": "2026-02-25T17:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "技術検討会議",           "EventId": "s007", "StartDateTime": "2026-01-20T10:00:00", "EndDateTime": "2026-01-20T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "進捗報告",               "EventId": "s008", "StartDateTime": "2025-12-15T14:00:00", "EndDateTime": "2025-12-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
+      { "Title": "キックオフミーティング", "EventId": "s009", "StartDateTime": "2025-11-05T10:00:00", "EndDateTime": "2025-11-05T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
+      { "Title": "設計レビュー",           "EventId": "s010", "StartDateTime": "2025-09-10T14:00:00", "EndDateTime": "2025-09-10T16:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "要件ヒアリング",         "EventId": "s011", "StartDateTime": "2025-07-22T09:00:00", "EndDateTime": "2025-07-22T10:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
+      { "Title": "プロジェクト開始会議",   "EventId": "s012", "StartDateTime": "2025-04-03T10:00:00", "EndDateTime": "2025-04-03T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      // ── 前年度（FY2024: 2024/04〜2025/03）サンプル ──
+      { "Title": "前年度 年度末報告",       "EventId": "s013", "StartDateTime": "2025-03-20T10:00:00", "EndDateTime": "2025-03-20T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "前年度 定例会議",         "EventId": "s014", "StartDateTime": "2025-01-15T14:00:00", "EndDateTime": "2025-01-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
+      { "Title": "前年度 設計レビュー",     "EventId": "s015", "StartDateTime": "2024-10-08T10:00:00", "EndDateTime": "2024-10-08T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
+      { "Title": "前年度 キックオフ",       "EventId": "s016", "StartDateTime": "2024-05-01T09:00:00", "EndDateTime": "2024-05-01T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" }
     ];
 
     const PROJECTS = /* PROJECTS_DATA_JSON */[
@@ -239,20 +224,26 @@
 <body>
 
 <h1>📊 工数ダッシュボード</h1>
-<div class="generated-at" id="generatedAt"></div>
+<div class="meta-row">
+  <span class="fy-badge" id="fyBadge"></span>
+  <span id="fyRange"></span>
+  <span id="generatedAt"></span>
+</div>
 
 <div class="grid">
 
   <!-- ① 期間別プロジェクト別工数（円グラフ） -->
   <div class="card">
-    <div class="card-title">🥧 プロジェクト別工数</div>
+    <div class="card-title">
+      🥧 プロジェクト別工数
+    </div>
     <div class="period-tabs">
       <button class="period-tab active" data-period="week">今週</button>
       <button class="period-tab" data-period="month">今月</button>
-      <button class="period-tab" data-period="year">今年</button>
+      <button class="period-tab" data-period="fiscal" id="tabFiscal">今年度</button>
     </div>
     <canvas id="pieChart"></canvas>
-    <table class="legend-table" id="pieLegendTable">
+    <table class="legend-table">
       <thead>
         <tr><th>プロジェクト</th><th>時間</th><th>割合</th></tr>
       </thead>
@@ -269,23 +260,33 @@
 
   <!-- ② 週・月別工数推移（棒グラフ） -->
   <div class="card">
-    <div class="card-title">📈 工数推移</div>
+    <div class="card-title">
+      📈 工数推移
+    </div>
     <select class="bar-selector" id="barSelector">
       <option value="week">週別（過去8週）</option>
-      <option value="month">月別（過去12ヶ月）</option>
+      <option value="fiscal_month">今年度月別（4月〜3月）</option>
+      <option value="fiscal_year">年度別比較</option>
     </select>
     <canvas id="barChart"></canvas>
   </div>
 
-  <!-- ③ プロジェクト別進捗率 -->
+  <!-- ③ プロジェクト別進捗率（今年度） -->
   <div class="card">
-    <div class="card-title">🎯 プロジェクト進捗率</div>
+    <div class="card-title">
+      🎯 プロジェクト進捗率
+      <span class="card-subtitle" id="progressFyLabel"></span>
+    </div>
     <div id="progressContainer"></div>
+    <div class="fy-note">※ 今年度（4/1〜3/31）の実績工数 / 予定工数</div>
   </div>
 
   <!-- ④ 工数詳細ログ一覧（フルワイド） -->
   <div class="card full-width">
-    <div class="card-title">📋 工数詳細ログ</div>
+    <div class="card-title">
+      📋 工数詳細ログ
+      <span class="card-subtitle" id="logFyLabel"></span>
+    </div>
     <div style="overflow-x:auto;">
       <table class="log-table">
         <thead>
@@ -294,6 +295,7 @@
             <th>予定名</th>
             <th>プロジェクト</th>
             <th>時間</th>
+            <th>年度</th>
           </tr>
         </thead>
         <tbody id="logTableBody"></tbody>
@@ -305,102 +307,173 @@
 
 <script>
 // ============================================================
+// 会計年度ユーティリティ（4月1日〜翌年3月31日）
+// ============================================================
+
+/**
+ * 指定日が属する会計年度の開始日（4月1日）を返す
+ * 例: 2026-03-13 → 2025-04-01（FY2025）
+ *     2026-05-01 → 2026-04-01（FY2026）
+ */
+function getFiscalYearStart(date) {
+  const d = date ? new Date(date) : new Date();
+  const month = d.getMonth(); // 0-indexed: 3=April
+  const year = d.getFullYear();
+  // 1月〜3月は前の年の4月始まり
+  return new Date(month < 3 ? year - 1 : year, 3, 1, 0, 0, 0, 0);
+}
+
+/**
+ * 指定日が属する会計年度の終了日（3月31日 23:59:59）を返す
+ */
+function getFiscalYearEnd(date) {
+  const start = getFiscalYearStart(date);
+  return new Date(start.getFullYear() + 1, 2, 31, 23, 59, 59, 999);
+}
+
+/**
+ * 会計年度ラベルを返す（例: "2025年度"）
+ */
+function getFiscalYearLabel(date) {
+  const start = getFiscalYearStart(date);
+  return `${start.getFullYear()}年度`;
+}
+
+/**
+ * 指定日が属する会計年度の4月〜3月の月ラベル配列を返す
+ * 例（FY2025）: ["2025/04","2025/05",...,"2026/01","2026/02","2026/03"]
+ */
+function getFiscalMonths(date) {
+  const start = getFiscalYearStart(date);
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const m = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    months.push(`${m.getFullYear()}/${String(m.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return months;
+}
+
+// ============================================================
 // ユーティリティ
 // ============================================================
 const projectMap = {};
 PROJECTS.forEach(p => { projectMap[p.ProjectCode] = p; });
 
-function parseDate(str) {
-  return new Date(str);
+function parseDate(str) { return new Date(str); }
+
+function fmtDate(d) {
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
 }
 
-// 期間フィルター
+function getMonthKey(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+/**
+ * 期間フィルター
+ * period: 'week' | 'month' | 'fiscal'
+ */
 function getRange(period) {
   const now = new Date();
-  const start = new Date(now);
   if (period === 'week') {
-    const day = now.getDay(); // 0=Sun
+    const day = now.getDay();
     const diff = day === 0 ? 6 : day - 1; // 月曜始まり
+    const start = new Date(now);
     start.setDate(now.getDate() - diff);
     start.setHours(0, 0, 0, 0);
-  } else if (period === 'month') {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-  } else if (period === 'year') {
-    start.setMonth(0, 1);
-    start.setHours(0, 0, 0, 0);
+    return { start, end: now };
   }
-  return start;
+  if (period === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { start, end: now };
+  }
+  if (period === 'fiscal') {
+    return {
+      start: getFiscalYearStart(now),
+      end: getFiscalYearEnd(now)
+    };
+  }
+  return { start: new Date(0), end: now };
 }
 
 function filterLogs(period) {
-  const start = getRange(period);
-  return WORK_LOGS.filter(log => parseDate(log.StartDateTime) >= start);
+  const { start, end } = getRange(period);
+  return WORK_LOGS.filter(log => {
+    const d = parseDate(log.StartDateTime);
+    return d >= start && d <= end;
+  });
 }
 
 // ============================================================
-// 生成日時の表示
+// ヘッダー情報の表示
 // ============================================================
-(function() {
-  const el = document.getElementById('generatedAt');
-  try {
-    const d = new Date(GENERATED_AT);
-    const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-    el.textContent = `最終更新: ${jst.toISOString().replace('T', ' ').substring(0, 16)} JST`;
-  } catch(e) {
-    el.textContent = `最終更新: ${GENERATED_AT}`;
-  }
-})();
+const now = new Date();
+const fyStart = getFiscalYearStart(now);
+const fyEnd   = getFiscalYearEnd(now);
+const fyLabel = getFiscalYearLabel(now);
+
+document.getElementById('fyBadge').textContent = fyLabel;
+document.getElementById('fyRange').textContent =
+  `${fmtDate(fyStart)} 〜 ${fmtDate(fyEnd)}`;
+document.getElementById('progressFyLabel').textContent = fyLabel;
+document.getElementById('logFyLabel').textContent = '全期間';
+
+// 今年度タブのラベルを年度名で更新
+document.getElementById('tabFiscal').textContent = `今年度（${fyLabel}）`;
+
+try {
+  const d = new Date(GENERATED_AT);
+  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  document.getElementById('generatedAt').textContent =
+    `最終更新: ${jst.toISOString().replace('T',' ').substring(0,16)} JST`;
+} catch(e) {
+  document.getElementById('generatedAt').textContent = `最終更新: ${GENERATED_AT}`;
+}
 
 // ============================================================
 // ① 円グラフ
 // ============================================================
 let pieChart = null;
 
-function buildPieData(period) {
+function renderPie(period) {
   const logs = filterLogs(period);
   const totals = {};
   logs.forEach(log => {
     totals[log.ProjectCode] = (totals[log.ProjectCode] || 0) + Number(log.DurationHours);
   });
 
-  const activeProjects = PROJECTS.filter(p => p.IsActive);
-  const labels = [];
-  const data = [];
-  const colors = [];
-
-  activeProjects.forEach(p => {
-    const h = totals[p.ProjectCode] || 0;
+  const labels = [], data = [], colors = [];
+  PROJECTS.filter(p => p.IsActive).forEach(p => {
+    const h = Math.round((totals[p.ProjectCode] || 0) * 100) / 100;
     if (h > 0) {
       labels.push(p.Title);
-      data.push(Math.round(h * 100) / 100);
+      data.push(h);
       colors.push(p.Color || '#ccc');
     }
   });
 
-  return { labels, data, colors };
-}
-
-function renderPie(period) {
-  const { labels, data, colors } = buildPieData(period);
   const total = data.reduce((a, b) => a + b, 0);
 
-  // 凡例テーブル更新
+  // 凡例テーブル
   const tbody = document.getElementById('pieLegendBody');
   tbody.innerHTML = '';
   labels.forEach((label, i) => {
     const pct = total > 0 ? ((data[i] / total) * 100).toFixed(1) : '0.0';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><span class="color-dot" style="background:${colors[i]}"></span>${label}</td>
+      <td style="display:flex;align-items:center">
+        <span class="color-dot" style="background:${colors[i]}"></span>${label}
+      </td>
       <td>${data[i]}h</td>
       <td>${pct}%</td>
     `;
     tbody.appendChild(tr);
   });
-  document.getElementById('pieTotalHours').textContent = `${Math.round(total * 100) / 100}h`;
+  document.getElementById('pieTotalHours').textContent =
+    `${Math.round(total * 100) / 100}h`;
 
-  // グラフ更新
+  // グラフ
   const ctx = document.getElementById('pieChart').getContext('2d');
   if (pieChart) { pieChart.destroy(); }
 
@@ -416,13 +489,8 @@ function renderPie(period) {
   pieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: colors,
-        borderWidth: 2,
-        borderColor: '#fff'
-      }]
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
     },
     options: {
       responsive: true,
@@ -430,7 +498,7 @@ function renderPie(period) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: function(ctx) {
+            label: ctx => {
               const val = ctx.parsed;
               const pct = ((val / total) * 100).toFixed(1);
               return ` ${ctx.label}: ${val}h (${pct}%)`;
@@ -442,7 +510,6 @@ function renderPie(period) {
   });
 }
 
-// 期間タブのイベント
 document.querySelectorAll('.period-tab').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
@@ -451,10 +518,10 @@ document.querySelectorAll('.period-tab').forEach(btn => {
   });
 });
 
-renderPie('week'); // 初期表示
+renderPie('week');
 
 // ============================================================
-// ② 棒グラフ（週別 / 月別）
+// ② 棒グラフ
 // ============================================================
 let barChart = null;
 
@@ -464,50 +531,86 @@ function getWeekLabel(date) {
   const diff = day === 0 ? 6 : day - 1;
   const mon = new Date(d);
   mon.setDate(d.getDate() - diff);
-  const mm = String(mon.getMonth() + 1).padStart(2, '0');
-  const dd = String(mon.getDate()).padStart(2, '0');
-  return `${mm}/${dd}週`;
-}
-
-function getMonthLabel(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${String(mon.getMonth()+1).padStart(2,'0')}/${String(mon.getDate()).padStart(2,'0')}週`;
 }
 
 function buildBarData(mode) {
-  const now = new Date();
-  const periodCount = mode === 'week' ? 8 : 12;
-  const buckets = {};
-  const bucketOrder = [];
-
-  for (let i = periodCount - 1; i >= 0; i--) {
-    const d = new Date(now);
-    if (mode === 'week') {
+  // ── 週別（過去8週）
+  if (mode === 'week') {
+    const buckets = {}, order = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now);
       d.setDate(d.getDate() - i * 7);
       const key = getWeekLabel(d);
-      if (!buckets[key]) { buckets[key] = {}; bucketOrder.push(key); }
-    } else {
-      d.setMonth(d.getMonth() - i);
-      const key = getMonthLabel(d);
-      if (!buckets[key]) { buckets[key] = {}; bucketOrder.push(key); }
+      if (!buckets[key]) { buckets[key] = {}; order.push(key); }
     }
+    WORK_LOGS.forEach(log => {
+      const key = getWeekLabel(log.StartDateTime);
+      if (buckets[key]) {
+        buckets[key][log.ProjectCode] = (buckets[key][log.ProjectCode] || 0) + Number(log.DurationHours);
+      }
+    });
+    const datasets = PROJECTS.filter(p => p.IsActive).map(p => ({
+      label: p.Title,
+      data: order.map(k => Math.round((buckets[k][p.ProjectCode] || 0) * 100) / 100),
+      backgroundColor: p.Color || '#ccc'
+    }));
+    return { labels: order, datasets };
   }
 
-  WORK_LOGS.forEach(log => {
-    const d = parseDate(log.StartDateTime);
-    const key = mode === 'week' ? getWeekLabel(d) : getMonthLabel(d);
-    if (buckets[key]) {
-      buckets[key][log.ProjectCode] = (buckets[key][log.ProjectCode] || 0) + Number(log.DurationHours);
-    }
-  });
+  // ── 今年度月別（4月〜3月の12ヶ月固定）
+  if (mode === 'fiscal_month') {
+    const fiscalMonths = getFiscalMonths(now); // ["2025/04", ..., "2026/03"]
+    const buckets = {};
+    fiscalMonths.forEach(m => { buckets[m] = {}; });
 
-  const datasets = PROJECTS.filter(p => p.IsActive).map(p => ({
-    label: p.Title,
-    data: bucketOrder.map(k => Math.round((buckets[k][p.ProjectCode] || 0) * 100) / 100),
-    backgroundColor: p.Color || '#ccc'
-  }));
+    // 今年度のログのみ
+    const { start, end } = getRange('fiscal');
+    WORK_LOGS.filter(log => {
+      const d = parseDate(log.StartDateTime);
+      return d >= start && d <= end;
+    }).forEach(log => {
+      const key = getMonthKey(log.StartDateTime);
+      if (buckets[key]) {
+        buckets[key][log.ProjectCode] = (buckets[key][log.ProjectCode] || 0) + Number(log.DurationHours);
+      }
+    });
 
-  return { labels: bucketOrder, datasets };
+    // ラベルを「4月」「5月」...「3月」形式に変換
+    const labels = fiscalMonths.map(m => {
+      const month = parseInt(m.split('/')[1]);
+      return `${month}月`;
+    });
+
+    const datasets = PROJECTS.filter(p => p.IsActive).map(p => ({
+      label: p.Title,
+      data: fiscalMonths.map(k => Math.round((buckets[k][p.ProjectCode] || 0) * 100) / 100),
+      backgroundColor: p.Color || '#ccc'
+    }));
+    return { labels, datasets };
+  }
+
+  // ── 年度別比較（全ログを会計年度単位で集計）
+  if (mode === 'fiscal_year') {
+    const fyBuckets = {}, fyOrder = [];
+    WORK_LOGS.forEach(log => {
+      const d = parseDate(log.StartDateTime);
+      const fy = getFiscalYearLabel(d); // "2024年度", "2025年度" ...
+      if (!fyBuckets[fy]) { fyBuckets[fy] = {}; fyOrder.push(fy); }
+      fyBuckets[fy][log.ProjectCode] =
+        (fyBuckets[fy][log.ProjectCode] || 0) + Number(log.DurationHours);
+    });
+    // 年度順にソート
+    fyOrder.sort();
+    const datasets = PROJECTS.filter(p => p.IsActive).map(p => ({
+      label: p.Title,
+      data: fyOrder.map(fy => Math.round((fyBuckets[fy][p.ProjectCode] || 0) * 100) / 100),
+      backgroundColor: p.Color || '#ccc'
+    }));
+    return { labels: fyOrder, datasets };
+  }
+
+  return { labels: [], datasets: [] };
 }
 
 function renderBar(mode) {
@@ -522,15 +625,14 @@ function renderBar(mode) {
       plugins: {
         legend: { position: 'bottom' },
         tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}h`
-          }
+          callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}h` }
         }
       },
       scales: {
         x: { stacked: true },
         y: {
           stacked: true,
+          beginAtZero: true,
           ticks: { callback: v => `${v}h` },
           title: { display: true, text: '工数（時間）' }
         }
@@ -543,41 +645,51 @@ document.getElementById('barSelector').addEventListener('change', function() {
   renderBar(this.value);
 });
 
-renderBar('week'); // 初期表示
+renderBar('week');
 
 // ============================================================
-// ③ 進捗率
+// ③ 進捗率（今年度のみカウント）
 // ============================================================
 (function() {
   const container = document.getElementById('progressContainer');
+
+  // 今年度の工数のみ集計
+  const fiscalLogs = filterLogs('fiscal');
   const totals = {};
-  WORK_LOGS.forEach(log => {
+  fiscalLogs.forEach(log => {
     totals[log.ProjectCode] = (totals[log.ProjectCode] || 0) + Number(log.DurationHours);
   });
 
   PROJECTS.filter(p => p.IsActive).forEach(p => {
-    const actual = totals[p.ProjectCode] || 0;
+    const actual  = Math.round((totals[p.ProjectCode] || 0) * 100) / 100;
     const planned = p.PlannedHours || 0;
-    const pct = planned > 0 ? Math.min((actual / planned) * 100, 100) : 0;
-    const isOver = planned > 0 && actual > planned;
-    const overPct = planned > 0 && actual > planned ? ((actual / planned) * 100).toFixed(1) : null;
+    const ratio   = planned > 0 ? (actual / planned) * 100 : 0;
+    const pctDisp = planned > 0 ? ratio.toFixed(1) : null;
+    const barPct  = Math.min(ratio, 100);
+
+    // 80%超 → 警告色、100%超 → 超過色
+    const extraClass = ratio >= 100 ? 'progress-over' : ratio >= 80 ? 'progress-warn' : '';
 
     const div = document.createElement('div');
     div.className = 'progress-item';
     div.innerHTML = `
       <div class="progress-header">
-        <span>
+        <span style="display:flex;align-items:center;gap:4px">
           <span class="color-dot" style="background:${p.Color}"></span>
           ${p.Title}
         </span>
         <span>
           ${actual}h / ${planned > 0 ? planned + 'h' : '未設定'}
-          ${overPct ? `<span style="color:#e74c3c;font-size:0.8em"> (${overPct}%)</span>` : ''}
+          ${pctDisp
+            ? `<span style="color:${ratio >= 100 ? '#e74c3c' : ratio >= 80 ? '#f39c12' : '#27ae60'}">
+                 (${pctDisp}%)
+               </span>`
+            : ''}
         </span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill ${isOver ? 'progress-over' : ''}"
-             style="width:${pct}%; background:${isOver ? '' : p.Color}">
+        <div class="progress-bar-fill ${extraClass}"
+             style="width:${barPct}%; background:${extraClass ? '' : p.Color}">
         </div>
       </div>
     `;
@@ -586,7 +698,7 @@ renderBar('week'); // 初期表示
 })();
 
 // ============================================================
-// ④ 工数詳細ログテーブル
+// ④ 工数詳細ログテーブル（全期間・年度列付き）
 // ============================================================
 (function() {
   const tbody = document.getElementById('logTableBody');
@@ -595,17 +707,19 @@ renderBar('week'); // 初期表示
   );
 
   sorted.forEach(log => {
-    const d = parseDate(log.StartDateTime);
-    const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const d       = parseDate(log.StartDateTime);
     const project = projectMap[log.ProjectCode];
-    const color = project ? project.Color : '#999';
+    const color   = project ? project.Color : '#999';
+    const fy      = getFiscalYearLabel(d);
+    const isCurrentFy = (getFiscalYearStart(d).getTime() === fyStart.getTime());
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${dateStr}</td>
+      <td>${fmtDate(d)}</td>
       <td>${log.Title}</td>
       <td><span class="project-badge" style="background:${color}">${log.ProjectName}</span></td>
       <td>${Number(log.DurationHours).toFixed(1)}h</td>
+      <td style="color:${isCurrentFy ? '#0078d4' : '#aaa'};font-size:0.8rem">${fy}</td>
     `;
     tbody.appendChild(tr);
   });
