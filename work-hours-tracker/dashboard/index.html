@@ -193,23 +193,23 @@
     // Power Automate が置換するデータ（プレースホルダー: /* LOGS_DATA_JSON */ など）
     const WORK_LOGS = /* LOGS_DATA_JSON */[
       // ── 今年度（FY2025: 2025/04〜2026/03）サンプル ──
-      { "Title": "週次定例ミーティング",   "EventId": "s001", "StartDateTime": "2026-03-10T10:00:00", "EndDateTime": "2026-03-10T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "要件定義レビュー",       "EventId": "s002", "StartDateTime": "2026-03-11T13:00:00", "EndDateTime": "2026-03-11T15:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
-      { "Title": "設計書レビュー",         "EventId": "s003", "StartDateTime": "2026-03-12T10:00:00", "EndDateTime": "2026-03-12T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "クライアント打ち合わせ", "EventId": "s004", "StartDateTime": "2026-03-13T14:00:00", "EndDateTime": "2026-03-13T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
-      { "Title": "スプリント計画",         "EventId": "s005", "StartDateTime": "2026-02-28T09:00:00", "EndDateTime": "2026-02-28T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
-      { "Title": "月次報告資料作成",       "EventId": "s006", "StartDateTime": "2026-02-25T15:00:00", "EndDateTime": "2026-02-25T17:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "技術検討会議",           "EventId": "s007", "StartDateTime": "2026-01-20T10:00:00", "EndDateTime": "2026-01-20T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "進捗報告",               "EventId": "s008", "StartDateTime": "2025-12-15T14:00:00", "EndDateTime": "2025-12-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
-      { "Title": "キックオフミーティング", "EventId": "s009", "StartDateTime": "2025-11-05T10:00:00", "EndDateTime": "2025-11-05T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
-      { "Title": "設計レビュー",           "EventId": "s010", "StartDateTime": "2025-09-10T14:00:00", "EndDateTime": "2025-09-10T16:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "要件ヒアリング",         "EventId": "s011", "StartDateTime": "2025-07-22T09:00:00", "EndDateTime": "2025-07-22T10:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
-      { "Title": "プロジェクト開始会議",   "EventId": "s012", "StartDateTime": "2025-04-03T10:00:00", "EndDateTime": "2025-04-03T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
+      { "Title": "週次定例ミーティング",   "EventId": "s001", "StartDateTime": "2026-03-10T10:00:00", "EndDateTime": "2026-03-10T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
+      { "Title": "要件定義レビュー",       "EventId": "s002", "StartDateTime": "2026-03-11T13:00:00", "EndDateTime": "2026-03-11T15:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB", "Status": "Active" },
+      { "Title": "設計書レビュー",         "EventId": "s003", "StartDateTime": "2026-03-12T10:00:00", "EndDateTime": "2026-03-12T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
+      { "Title": "クライアント打ち合わせ（削除済み）", "EventId": "s004", "StartDateTime": "2026-03-13T14:00:00", "EndDateTime": "2026-03-13T15:00:00", "DurationHours": 1, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC", "Status": "Cancelled" },
+      { "Title": "スプリント計画",         "EventId": "s005", "StartDateTime": "2026-02-28T09:00:00", "EndDateTime": "2026-02-28T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB", "Status": "Active" },
+      { "Title": "月次報告資料作成",       "EventId": "s006", "StartDateTime": "2026-02-25T15:00:00", "EndDateTime": "2026-02-25T17:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
+      { "Title": "技術検討会議（時刻変更済み）", "EventId": "s007", "StartDateTime": "2026-01-20T10:00:00", "EndDateTime": "2026-01-20T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Updated" },
+      { "Title": "進捗報告",               "EventId": "s008", "StartDateTime": "2025-12-15T14:00:00", "EndDateTime": "2025-12-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_c", "ProjectName": "プロジェクトC", "Status": "Active" },
+      { "Title": "キックオフミーティング", "EventId": "s009", "StartDateTime": "2025-11-05T10:00:00", "EndDateTime": "2025-11-05T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB", "Status": "Active" },
+      { "Title": "設計レビュー",           "EventId": "s010", "StartDateTime": "2025-09-10T14:00:00", "EndDateTime": "2025-09-10T16:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
+      { "Title": "要件ヒアリング",         "EventId": "s011", "StartDateTime": "2025-07-22T09:00:00", "EndDateTime": "2025-07-22T10:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC", "Status": "Active" },
+      { "Title": "プロジェクト開始会議",   "EventId": "s012", "StartDateTime": "2025-04-03T10:00:00", "EndDateTime": "2025-04-03T11:00:00", "DurationHours": 1,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
       // ── 前年度（FY2024: 2024/04〜2025/03）サンプル ──
-      { "Title": "前年度 年度末報告",       "EventId": "s013", "StartDateTime": "2025-03-20T10:00:00", "EndDateTime": "2025-03-20T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" },
-      { "Title": "前年度 定例会議",         "EventId": "s014", "StartDateTime": "2025-01-15T14:00:00", "EndDateTime": "2025-01-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB" },
-      { "Title": "前年度 設計レビュー",     "EventId": "s015", "StartDateTime": "2024-10-08T10:00:00", "EndDateTime": "2024-10-08T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC" },
-      { "Title": "前年度 キックオフ",       "EventId": "s016", "StartDateTime": "2024-05-01T09:00:00", "EndDateTime": "2024-05-01T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA" }
+      { "Title": "前年度 年度末報告",       "EventId": "s013", "StartDateTime": "2025-03-20T10:00:00", "EndDateTime": "2025-03-20T12:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" },
+      { "Title": "前年度 定例会議",         "EventId": "s014", "StartDateTime": "2025-01-15T14:00:00", "EndDateTime": "2025-01-15T15:00:00", "DurationHours": 1,   "ProjectCode": "proj_b", "ProjectName": "プロジェクトB", "Status": "Active" },
+      { "Title": "前年度 設計レビュー（削除済み）", "EventId": "s015", "StartDateTime": "2024-10-08T10:00:00", "EndDateTime": "2024-10-08T11:30:00", "DurationHours": 1.5, "ProjectCode": "proj_c", "ProjectName": "プロジェクトC", "Status": "Cancelled" },
+      { "Title": "前年度 キックオフ",       "EventId": "s016", "StartDateTime": "2024-05-01T09:00:00", "EndDateTime": "2024-05-01T11:00:00", "DurationHours": 2,   "ProjectCode": "proj_a", "ProjectName": "プロジェクトA", "Status": "Active" }
     ];
 
     const PROJECTS = /* PROJECTS_DATA_JSON */[
@@ -295,6 +295,7 @@
             <th>予定名</th>
             <th>プロジェクト</th>
             <th>時間</th>
+            <th>状態</th>
             <th>年度</th>
           </tr>
         </thead>
@@ -359,6 +360,10 @@ function getFiscalMonths(date) {
 const projectMap = {};
 PROJECTS.forEach(p => { projectMap[p.ProjectCode] = p; });
 
+// Cancelled を除いた有効ログのみを集計に使用する
+// Status フィールドが未設定の場合は Active として扱う（後方互換）
+const ACTIVE_LOGS = WORK_LOGS.filter(l => (l.Status || 'Active') !== 'Cancelled');
+
 function parseDate(str) { return new Date(str); }
 
 function fmtDate(d) {
@@ -397,9 +402,10 @@ function getRange(period) {
   return { start: new Date(0), end: now };
 }
 
+// Cancelled を除いた有効ログを期間でフィルタリング
 function filterLogs(period) {
   const { start, end } = getRange(period);
-  return WORK_LOGS.filter(log => {
+  return ACTIVE_LOGS.filter(log => {
     const d = parseDate(log.StartDateTime);
     return d >= start && d <= end;
   });
@@ -544,7 +550,7 @@ function buildBarData(mode) {
       const key = getWeekLabel(d);
       if (!buckets[key]) { buckets[key] = {}; order.push(key); }
     }
-    WORK_LOGS.forEach(log => {
+    ACTIVE_LOGS.forEach(log => {
       const key = getWeekLabel(log.StartDateTime);
       if (buckets[key]) {
         buckets[key][log.ProjectCode] = (buckets[key][log.ProjectCode] || 0) + Number(log.DurationHours);
@@ -564,9 +570,9 @@ function buildBarData(mode) {
     const buckets = {};
     fiscalMonths.forEach(m => { buckets[m] = {}; });
 
-    // 今年度のログのみ
+    // 今年度の有効ログのみ
     const { start, end } = getRange('fiscal');
-    WORK_LOGS.filter(log => {
+    ACTIVE_LOGS.filter(log => {
       const d = parseDate(log.StartDateTime);
       return d >= start && d <= end;
     }).forEach(log => {
@@ -590,10 +596,10 @@ function buildBarData(mode) {
     return { labels, datasets };
   }
 
-  // ── 年度別比較（全ログを会計年度単位で集計）
+  // ── 年度別比較（有効ログを会計年度単位で集計）
   if (mode === 'fiscal_year') {
     const fyBuckets = {}, fyOrder = [];
-    WORK_LOGS.forEach(log => {
+    ACTIVE_LOGS.forEach(log => {
       const d = parseDate(log.StartDateTime);
       const fy = getFiscalYearLabel(d); // "2024年度", "2025年度" ...
       if (!fyBuckets[fy]) { fyBuckets[fy] = {}; fyOrder.push(fy); }
@@ -707,18 +713,31 @@ renderBar('week');
   );
 
   sorted.forEach(log => {
-    const d       = parseDate(log.StartDateTime);
-    const project = projectMap[log.ProjectCode];
-    const color   = project ? project.Color : '#999';
-    const fy      = getFiscalYearLabel(d);
+    const d          = parseDate(log.StartDateTime);
+    const project    = projectMap[log.ProjectCode];
+    const color      = project ? project.Color : '#999';
+    const fy         = getFiscalYearLabel(d);
     const isCurrentFy = (getFiscalYearStart(d).getTime() === fyStart.getTime());
+    const status     = log.Status || 'Active';
+    const isCancelled = status === 'Cancelled';
+
+    // Cancelled 行はグレーアウト
+    const rowStyle = isCancelled ? 'opacity:0.45;' : '';
+
+    const statusBadge = {
+      'Active':    '<span style="color:#27ae60;font-size:0.78rem">● 有効</span>',
+      'Updated':   '<span style="color:#2980b9;font-size:0.78rem">✎ 更新済</span>',
+      'Cancelled': '<span style="color:#e74c3c;font-size:0.78rem">✕ 削除済</span>'
+    }[status] || status;
 
     const tr = document.createElement('tr');
+    tr.setAttribute('style', rowStyle);
     tr.innerHTML = `
       <td>${fmtDate(d)}</td>
       <td>${log.Title}</td>
-      <td><span class="project-badge" style="background:${color}">${log.ProjectName}</span></td>
-      <td>${Number(log.DurationHours).toFixed(1)}h</td>
+      <td><span class="project-badge" style="background:${isCancelled ? '#bbb' : color}">${log.ProjectName}</span></td>
+      <td>${isCancelled ? '<s>' : ''}${Number(log.DurationHours).toFixed(1)}h${isCancelled ? '</s>' : ''}</td>
+      <td>${statusBadge}</td>
       <td style="color:${isCurrentFy ? '#0078d4' : '#aaa'};font-size:0.8rem">${fy}</td>
     `;
     tbody.appendChild(tr);

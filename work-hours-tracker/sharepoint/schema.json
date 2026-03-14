@@ -130,6 +130,22 @@
           "type": "DateTime",
           "required": true,
           "note": "Power AutomateがutcNow()で自動設定する。"
+        },
+        {
+          "internalName": "Status",
+          "displayName": "ステータス",
+          "type": "Choice",
+          "required": true,
+          "default": "Active",
+          "choices": ["Active", "Cancelled", "Updated"],
+          "note": "Active=有効, Cancelled=予定削除により無効化, Updated=予定変更により更新済み。ダッシュボードはActiveのみ集計する。"
+        },
+        {
+          "internalName": "LastSyncedAt",
+          "displayName": "最終同期日時",
+          "type": "DateTime",
+          "required": false,
+          "note": "Flow3による更新・キャンセル処理の実行日時。Power AutomateがutcNow()で設定する。"
         }
       ]
     }

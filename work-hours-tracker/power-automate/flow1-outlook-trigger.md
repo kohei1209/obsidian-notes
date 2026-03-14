@@ -232,6 +232,8 @@ div(
 | ProjectCode | `body('Teams応答')?['data']?['projectCode']` |
 | ProjectName | `body('Teams応答')?['data']?['projectName']` |
 | RecordedAt | `utcNow()` |
+| Status | `Active` |
+| LastSyncedAt | `utcNow()` |
 
 ---
 
