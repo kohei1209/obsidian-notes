@@ -1,0 +1,176 @@
+{
+  "description": "工数管理システム SharePoint 構造定義",
+  "site": "[YOUR_SHAREPOINT_SITE_URL]",
+  "lists": [
+    {
+      "name": "Projects",
+      "displayName": "プロジェクト",
+      "description": "プロジェクトマスタ。Power Appsアプリから管理する。",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "プロジェクト名",
+          "type": "Text",
+          "required": true,
+          "example": "プロジェクトA"
+        },
+        {
+          "internalName": "ProjectCode",
+          "displayName": "プロジェクトコード",
+          "type": "Text",
+          "required": true,
+          "note": "英数字・アンダースコアのみ。Adaptive Cardのdataキーに使用。",
+          "example": "proj_a"
+        },
+        {
+          "internalName": "Color",
+          "displayName": "カラー",
+          "type": "Text",
+          "required": true,
+          "note": "HEX形式で入力。HTMLダッシュボードのグラフ色に反映される。",
+          "example": "#FF6384"
+        },
+        {
+          "internalName": "PlannedHours",
+          "displayName": "予定工数（時間）",
+          "type": "Number",
+          "required": false,
+          "note": "進捗率計算に使用。未設定の場合は進捗率を表示しない。",
+          "example": 100
+        },
+        {
+          "internalName": "IsActive",
+          "displayName": "有効",
+          "type": "Boolean",
+          "required": true,
+          "default": true,
+          "note": "falseにするとAdaptive Cardのボタンから除外される。"
+        }
+      ],
+      "sampleData": [
+        {
+          "Title": "プロジェクトA",
+          "ProjectCode": "proj_a",
+          "Color": "#FF6384",
+          "PlannedHours": 100,
+          "IsActive": true
+        },
+        {
+          "Title": "プロジェクトB",
+          "ProjectCode": "proj_b",
+          "Color": "#36A2EB",
+          "PlannedHours": 80,
+          "IsActive": true
+        },
+        {
+          "Title": "プロジェクトC",
+          "ProjectCode": "proj_c",
+          "Color": "#FFCE56",
+          "PlannedHours": 60,
+          "IsActive": true
+        }
+      ]
+    },
+    {
+      "name": "WorkHoursLog",
+      "displayName": "工数ログ",
+      "description": "Outlookの予定に紐づく工数記録。Power Automateが自動登録する。",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "予定名",
+          "type": "Text",
+          "required": true,
+          "note": "Outlookイベントのsubjectが自動入力される。"
+        },
+        {
+          "internalName": "EventId",
+          "displayName": "イベントID",
+          "type": "Text",
+          "required": true,
+          "note": "OutlookイベントのID。重複登録防止のためFlow内でフィルター確認に使用する。"
+        },
+        {
+          "internalName": "StartDateTime",
+          "displayName": "開始日時",
+          "type": "DateTime",
+          "required": true,
+          "note": "タイムゾーン: 日本標準時（JST, UTC+9）で保存推奨。"
+        },
+        {
+          "internalName": "EndDateTime",
+          "displayName": "終了日時",
+          "type": "DateTime",
+          "required": true
+        },
+        {
+          "internalName": "DurationHours",
+          "displayName": "工数（時間）",
+          "type": "Number",
+          "required": true,
+          "note": "小数点以下2桁まで。例: 1.5 = 1時間30分。"
+        },
+        {
+          "internalName": "ProjectCode",
+          "displayName": "プロジェクトコード",
+          "type": "Text",
+          "required": true,
+          "note": "Projects.ProjectCode と対応。"
+        },
+        {
+          "internalName": "ProjectName",
+          "displayName": "プロジェクト名",
+          "type": "Text",
+          "required": true,
+          "note": "非正規化（表示用）。Projects.Titleのコピー。"
+        },
+        {
+          "internalName": "RecordedAt",
+          "displayName": "登録日時",
+          "type": "DateTime",
+          "required": true,
+          "note": "Power AutomateがutcNow()で自動設定する。"
+        },
+        {
+          "internalName": "Status",
+          "displayName": "ステータス",
+          "type": "Choice",
+          "required": true,
+          "default": "Active",
+          "choices": ["Active", "Cancelled", "Updated"],
+          "note": "Active=有効, Cancelled=予定削除により無効化, Updated=予定変更により更新済み。ダッシュボードはActiveのみ集計する。"
+        },
+        {
+          "internalName": "LastSyncedAt",
+          "displayName": "最終同期日時",
+          "type": "DateTime",
+          "required": false,
+          "note": "Flow3による更新・キャンセル処理の実行日時。Power AutomateがutcNow()で設定する。"
+        }
+      ]
+    }
+  ],
+  "documentLibraries": [
+    {
+      "name": "WorkHoursDashboard",
+      "displayName": "工数ダッシュボード",
+      "description": "Power AutomateがHTMLダッシュボードを保存するドキュメントライブラリ。",
+      "files": [
+        {
+          "name": "index.html",
+          "description": "工数可視化ダッシュボード。Power Automateが工数登録のたびに自動更新する。",
+          "howToView": "SharePointからダウンロードしてブラウザで開く。"
+        }
+      ]
+    }
+  ],
+  "setupSteps": [
+    "1. SharePoint サイトを開く（または新規作成）",
+    "2. 「サイトコンテンツ」→「新規」→「リスト」で 'Projects' リストを作成",
+    "3. 上記のcolumns定義に従い列を追加する（Titleは既定で存在）",
+    "4. 同様に 'WorkHoursLog' リストを作成し列を追加",
+    "5. 「新規」→「ドキュメントライブラリ」で 'WorkHoursDashboard' を作成",
+    "6. Projects リストに sampleData のプロジェクトを登録",
+    "7. Power Automateフローを設定する（flow1-outlook-trigger.md 参照）"
+  ]
+}
