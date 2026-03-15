@@ -137,8 +137,8 @@
           "type": "Choice",
           "required": true,
           "default": "Active",
-          "choices": ["Active", "Cancelled", "Updated"],
-          "note": "Active=有効, Cancelled=予定削除により無効化, Updated=予定変更により更新済み。ダッシュボードはActiveのみ集計する。"
+          "choices": ["Active", "Cancelled"],
+          "note": "Active=有効, Cancelled=予定削除により無効化。更新時はActiveを維持し、LastSyncedAtで更新履歴を追跡する。ダッシュボードはCancelled以外を集計する。"
         },
         {
           "internalName": "LastSyncedAt",

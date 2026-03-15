@@ -102,8 +102,8 @@
 <script>
 // ══════════════════════════════════════════════
 //  DATA — Power Automate replaces these via concat()
-//  EventId-based: schedule changes delete old records,
-//  so WORK_LOGS always contains latest data only.
+//  Status-based: updates overwrite the same record (Status=Active),
+//  deletions mark Status=Cancelled. HTML filters out Cancelled logs.
 // ══════════════════════════════════════════════
 const WORK_LOGS = /* LOGS_DATA_JSON */[
   {"Title":"要件定義MTG","EventId":"ev001","StartDateTime":"2026-03-10T09:00:00","EndDateTime":"2026-03-10T11:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
@@ -271,7 +271,7 @@ function renderLogTable(){
     const pName=log.ProjectName||(proj?proj.Title:'')||'未分類';
     const fy=getFYLabel(getFY(log.StartDateTime)),isCurrent=getFY(log.StartDateTime)===selectedFY;
     const status=log.Status||'Active',isCancelled=status==='Cancelled';
-    const badge={'Active':'<span style="color:#27ae60;font-size:0.78rem">● 有効</span>','Updated':'<span style="color:#2980b9;font-size:0.78rem">✎ 更新済</span>','Cancelled':'<span style="color:#e74c3c;font-size:0.78rem">✕ 削除済</span>'}[status]||status;
+    const badge={'Active':'<span style="color:#27ae60;font-size:0.78rem">● 有効</span>','Cancelled':'<span style="color:#e74c3c;font-size:0.78rem">✕ 削除済</span>'}[status]||status;
     const tr=document.createElement('tr');tr.setAttribute('style',isCancelled?'opacity:0.45':'');
     tr.innerHTML='<td>'+fmtDate(d)+'</td><td>'+log.Title+'</td><td><span class="project-badge" style="background:'+(isCancelled?'#bbb':color)+'">'+pName+'</span></td><td>'+(isCancelled?'<s>':'')+Number(log.DurationHours).toFixed(1)+'h'+(isCancelled?'</s>':'')+'</td><td>'+badge+'</td><td style="color:'+(isCurrent?'#0078d4':'#aaa')+';font-size:0.8rem">'+fy+'</td>';
     tbody.appendChild(tr);
