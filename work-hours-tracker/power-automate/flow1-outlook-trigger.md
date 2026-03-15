@@ -124,17 +124,50 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 ---
 
 ### Step 6: プロジェクト情報の変数設定
-**変数の初期化** アクション ×2
 
-**条件分岐**: `length(body('プロジェクトマッチング')?['value'])` が `0` より大きい場合
+> **⚠️ Power Automate の制約**: 「変数の初期化」アクションは
+> 条件分岐やループの**中には配置できない**。
+> そのため、先に空文字で初期化してから、条件分岐の中で「変数の設定」で上書きする。
+
+#### Step 6-1: 変数を空文字で初期化する（条件分岐の**前**に配置）
+
+**アクション①**: `変数を初期化する`
+- 名前: `MatchedProjectCode`
+- 型: `文字列`
+- 値: `''`（空文字）
+
+**アクション②**: `変数を初期化する`
+- 名前: `MatchedProjectName`
+- 型: `文字列`
+- 値: `''`（空文字）
+
+#### Step 6-2: マッチした場合のみ変数を上書きする
+
+**条件分岐** アクション:
+- 条件: `length(body('プロジェクトマッチング')?['value'])` が `0` より大きい
 
 **Yes の場合（マッチあり）**:
-- `MatchedProjectCode` = `first(body('プロジェクトマッチング')?['value'])?['ProjectCode']`
-- `MatchedProjectName` = `first(body('プロジェクトマッチング')?['value'])?['Title']`
 
-**No の場合（マッチなし＝カテゴリ未設定 or 未登録カテゴリ）**:
-- `MatchedProjectCode` = `''`（空文字）
-- `MatchedProjectName` = `''`（空文字）
+**アクション③**: `変数の設定`（「変数の**初期化**」ではない）
+- 名前: `MatchedProjectCode`
+- 値: `first(body('プロジェクトマッチング')?['value'])?['ProjectCode']`
+
+**アクション④**: `変数の設定`
+- 名前: `MatchedProjectName`
+- 値: `first(body('プロジェクトマッチング')?['value'])?['Title']`
+
+**No の場合（マッチなし）**:
+- 何もしない（Step 6-1 で空文字に初期化済み）
+
+> **フロー上の見た目（上から順に）**:
+> ```
+> [変数を初期化する] MatchedProjectCode = ''
+> [変数を初期化する] MatchedProjectName = ''
+> [条件]  length(...) > 0 ?
+>   ├─ Yes → [変数の設定] MatchedProjectCode = ...ProjectCode
+>   │        [変数の設定] MatchedProjectName = ...Title
+>   └─ No  → （空）
+> ```
 
 ---
 
