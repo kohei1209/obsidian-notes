@@ -253,14 +253,11 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 
 ---
 
-### Step 10: HTML ダッシュボード再生成
-**条件分岐**: `variables('HasChanges')` が `true` の場合のみ実行
-
-**コネクタ**: Power Automate（または HTTP）
-**アクション**: Flow 2（`[工数管理] HTML ダッシュボード生成`）を呼び出す
-
-> Step 8 の「項目の更新」アクションの**後ろ（Succeeded ブランチ）** に配置する。
-> 変更がない場合は HTML 再生成をスキップしてフロー実行回数を節約する。
+> **HTML ダッシュボードの更新について**:
+> Step 8 で WorkHoursLog の項目を更新すると、Flow 2（SharePoint トリガー）が
+> **自動的に発火**するため、このフローから呼び出す必要はない。
+> 変更なし（`HasChanges=false`）の場合は Step 8 自体がスキップされるので、
+> Flow 2 も発火しない。
 
 ---
 
@@ -298,10 +295,9 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 
 ---
 
-### Step 6（Flow 3b）: HTML ダッシュボード再生成
-Flow 2 を呼び出す（Flow 3a の Step 10 と同じ）。
-
-> Step 4 の「項目の更新」が完了してから呼び出す（Succeeded ブランチに配置）。
+> **HTML ダッシュボードの更新について**:
+> Step 4 で WorkHoursLog の Status を Cancelled に更新すると、Flow 2（SharePoint トリガー）が
+> **自動的に発火**するため、このフローから呼び出す必要はない。
 
 ---
 
