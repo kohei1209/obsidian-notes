@@ -98,23 +98,26 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 ### ▼ Flow 3a（更新）のステップ 4〜10
 
 ### Step 4: 工数（時間数）の再計算
+
+> 計算方法の詳細は Flow 1 の Step 3 を参照。
+
+#### Step 4-1: 合計分数を計算する
+
+**データ操作 > 作成**（Compose）アクション
+- アクション名: `TotalMinutes`
+- 「入力」欄 → **「式」タブ**:
+  ```
+  div(sub(ticks(triggerBody()?['end']),ticks(triggerBody()?['start'])),600000000)
+  ```
+
+#### Step 4-2: 分を時間（小数）に変換する
+
 **変数の初期化** アクション
 - 名前: `NewDurationHours`
 - 型: `浮動小数点数`
 - 値（式）:
   ```
-  round(
-    div(
-      float(
-        sub(
-          ticks(triggerBody()?['end']),
-          ticks(triggerBody()?['start'])
-        )
-      ),
-      36000000000
-    ),
-    2
-  )
+  float(concat(string(div(outputs('TotalMinutes'),60)),'.',if(less(div(mul(mod(outputs('TotalMinutes'),60),100),60),10),concat('0',string(div(mul(mod(outputs('TotalMinutes'),60),100),60))),string(div(mul(mod(outputs('TotalMinutes'),60),100),60)))))
   ```
 
 ---
