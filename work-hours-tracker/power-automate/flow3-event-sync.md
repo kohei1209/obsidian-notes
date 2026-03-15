@@ -53,10 +53,10 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 
 ## ステップ一覧
 
-> **⚠️ Outlook V3 トリガーの日付形式について**
-> V3 トリガーの `start` / `end` はオブジェクト（`{dateTime: "...", timeZone: "..."}`）で
-> 返される。日時の値を使うときは `triggerBody()?['start']?['dateTime']` のように
-> `?['dateTime']` を付けること。詳細は Flow 1 のトリガー説明を参照。
+> **Outlook V3 トリガーの日付形式について**
+> V3 トリガーの `start` / `end` は ISO 形式の日付文字列で返される。
+> そのまま `ticks()` や `formatDateTime()` に渡して使える。
+> 詳細は Flow 1 のトリガー説明を参照。
 
 ### Step 1: 終日イベントのスキップ
 **条件分岐** アクション（Flow 3a のみ）
@@ -112,7 +112,7 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 - アクション名: `TotalMinutes`
 - 「入力」欄 → **「式」タブ**:
   ```
-  div(sub(ticks(triggerBody()?['end']?['dateTime']),ticks(triggerBody()?['start']?['dateTime'])),600000000)
+  div(sub(ticks(triggerBody()?['end']),ticks(triggerBody()?['start'])),600000000)
   ```
 
 #### Step 4-2: 分を時間（小数）に変換する
@@ -208,7 +208,7 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 
 | 判定項目 | 条件 |
 |---------|------|
-| 時刻変更 | `triggerBody()?['start']?['dateTime']` ≠ 既存レコードの `StartDateTime` |
+| 時刻変更 | `triggerBody()?['start']` ≠ 既存レコードの `StartDateTime` |
 | 工数変更 | `variables('NewDurationHours')` ≠ 既存レコードの `DurationHours` |
 | プロジェクト変更 | `variables('NewProjectCode')` ≠ 既存レコードの `ProjectCode` |
 | 件名変更 | `triggerBody()?['subject']` ≠ 既存レコードの `Title` |
@@ -231,8 +231,8 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 | フィールド | 式 | 備考 |
 |-----------|-----|------|
 | Title | `triggerBody()?['subject']` | 件名を最新に同期 |
-| StartDateTime | `triggerBody()?['start']?['dateTime']` | **⚠️ `?['dateTime']` が必要** |
-| EndDateTime | `triggerBody()?['end']?['dateTime']` | **⚠️ `?['dateTime']` が必要** |
+| StartDateTime | `triggerBody()?['start']` | 予定の開始日時 |
+| EndDateTime | `triggerBody()?['end']` | 予定の終了日時 |
 | DurationHours | `variables('NewDurationHours')` | round 済み |
 | ProjectCode | `variables('NewProjectCode')` | カテゴリ変更時に自動更新 |
 | ProjectName | `variables('NewProjectName')` | カテゴリ変更時に自動更新 |
@@ -253,7 +253,7 @@ Flow 3b（削除）で異なる箇所は `【削除版】` と注記する。
 🔄 工数ログを更新しました。
 
 📅 @{triggerBody()?['subject']}
-⏰ @{formatDateTime(triggerBody()?['start']?['dateTime'], 'yyyy/MM/dd HH:mm')} 〜 @{formatDateTime(triggerBody()?['end']?['dateTime'], 'HH:mm')}（@{variables('NewDurationHours')}h）
+⏰ @{formatDateTime(triggerBody()?['start'], 'yyyy/MM/dd HH:mm')} 〜 @{formatDateTime(triggerBody()?['end'], 'HH:mm')}（@{variables('NewDurationHours')}h）
 📁 @{if(equals(variables('NewProjectCode'), ''), '未分類', variables('NewProjectName'))}
 ```
 
