@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工数ダッシュボード v4.0</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI','Yu Gothic UI','Meiryo',sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; color: #1a1a2e; }
+  .meta-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 0.82rem; color: #888; flex-wrap: wrap; }
+  .fy-badge { background: #0078d4; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+  .fy-select { padding: 4px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.82rem; }
+  .warn-bar { background: #fff3cd; color: #856404; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; margin-bottom: 16px; display: none; }
+  .warn-bar.show { display: block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .card-title { font-size: 1rem; font-weight: 600; color: #555; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-subtitle { font-size: 0.75rem; color: #999; margin-left: auto; font-weight: normal; }
+  .full-width { grid-column: 1 / -1; }
+  .period-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .period-tab { padding: 6px 16px; border: 1px solid #ddd; border-radius: 20px; background: #f5f5f5; cursor: pointer; font-size: 0.82rem; transition: all 0.2s; }
+  .period-tab.active { background: #0078d4; color: #fff; border-color: #0078d4; }
+  .bar-selector { padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.82rem; }
+  .legend-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 16px; }
+  .legend-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #eee; color: #888; font-weight: 600; }
+  .legend-table td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
+  .legend-table tfoot td { font-weight: 700; border-top: 2px solid #ddd; }
+  .color-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .progress-item { margin-bottom: 16px; }
+  .progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+  .progress-bar-bg { background: #eee; border-radius: 6px; height: 20px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s; }
+  .progress-warn { background: #f39c12 !important; }
+  .progress-over { background: #e74c3c !important; }
+  .fy-note { font-size: 0.75rem; color: #aaa; margin-top: 12px; }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .log-table th { text-align: left; padding: 8px; background: #f7f8fa; border-bottom: 2px solid #e0e0e0; color: #666; font-weight: 600; position: sticky; top: 0; }
+  .log-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; }
+  .log-table tbody tr:hover { background: #f0f6ff; }
+  .project-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+  .no-data { text-align: center; padding: 40px; color: #aaa; }
+  @media(max-width:900px){ .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>📊 工数ダッシュボード</h1>
+<div class="meta-row">
+  <select class="fy-select" id="fySelect" onchange="onFYChange()"></select>
+  <span class="fy-badge" id="fyBadge"></span>
+  <span id="fyRange"></span>
+  <span id="generatedAt"></span>
+</div>
+<div class="warn-bar" id="warnBar"></div>
+
+<div class="grid">
+  <!-- ① Pie chart with period tabs -->
+  <div class="card">
+    <div class="card-title">🥧 プロジェクト別工数</div>
+    <div class="period-tabs">
+      <button class="period-tab active" data-period="week">今週</button>
+      <button class="period-tab" data-period="month">今月</button>
+      <button class="period-tab" data-period="fiscal" id="tabFiscal">今年度</button>
+    </div>
+    <canvas id="pieChart"></canvas>
+    <table class="legend-table">
+      <thead><tr><th>プロジェクト</th><th>時間</th><th>割合</th></tr></thead>
+      <tbody id="pieLegendBody"></tbody>
+      <tfoot><tr><td>合計</td><td id="pieTotalHours">-</td><td>100%</td></tr></tfoot>
+    </table>
+  </div>
+  <!-- ② Bar chart with dropdown -->
+  <div class="card">
+    <div class="card-title">📈 工数推移</div>
+    <select class="bar-selector" id="barSelector">
+      <option value="week">週別（過去8週）</option>
+      <option value="fiscal_month">今年度月別（4月〜3月）</option>
+      <option value="fiscal_year">年度別比較</option>
+    </select>
+    <canvas id="barChart"></canvas>
+  </div>
+  <!-- ③ Progress bars -->
+  <div class="card">
+    <div class="card-title">🎯 プロジェクト進捗率 <span class="card-subtitle" id="progressFyLabel"></span></div>
+    <div id="progressContainer"></div>
+    <div class="fy-note">※ 選択年度の実績工数 / 予定工数</div>
+  </div>
+  <!-- ④ Log table -->
+  <div class="card full-width">
+    <div class="card-title">📋 工数詳細ログ <span class="card-subtitle" id="logFyLabel"></span></div>
+    <div style="overflow-x:auto;max-height:450px;overflow-y:auto;">
+      <table class="log-table">
+        <thead><tr><th>日付</th><th>予定名</th><th>プロジェクト</th><th>時間</th><th>状態</th><th>年度</th></tr></thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA — Power Automate replaces these via concat()
+//  EventId-based: schedule changes delete old records,
+//  so WORK_LOGS always contains latest data only.
+// ══════════════════════════════════════════════
+const WORK_LOGS = /* LOGS_DATA_JSON */[
+  {"Title":"要件定義MTG","EventId":"ev001","StartDateTime":"2026-03-10T09:00:00","EndDateTime":"2026-03-10T11:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"設計レビュー","EventId":"ev002","StartDateTime":"2026-03-10T13:00:00","EndDateTime":"2026-03-10T15:30:00","DurationHours":2.5,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Active"},
+  {"Title":"テスト実施","EventId":"ev003","StartDateTime":"2026-03-09T13:00:00","EndDateTime":"2026-03-09T17:00:00","DurationHours":4,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"週次報告","EventId":"ev004","StartDateTime":"2026-03-11T10:00:00","EndDateTime":"2026-03-11T11:00:00","DurationHours":1,"ProjectCode":"proj_c","ProjectName":"プロジェクトC","Status":"Active"},
+  {"Title":"コードレビュー","EventId":"ev005","StartDateTime":"2026-03-12T09:00:00","EndDateTime":"2026-03-12T10:30:00","DurationHours":1.5,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Active"},
+  {"Title":"スプリント計画","EventId":"ev006","StartDateTime":"2026-03-05T09:00:00","EndDateTime":"2026-03-05T10:00:00","DurationHours":1,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"クライアント打合せ","EventId":"ev007","StartDateTime":"2026-02-20T10:00:00","EndDateTime":"2026-02-20T11:30:00","DurationHours":1.5,"ProjectCode":"proj_c","ProjectName":"プロジェクトC","Status":"Active"},
+  {"Title":"進捗報告","EventId":"ev008","StartDateTime":"2026-02-15T14:00:00","EndDateTime":"2026-02-15T15:00:00","DurationHours":1,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Active"},
+  {"Title":"設計書作成","EventId":"ev009","StartDateTime":"2026-01-22T09:00:00","EndDateTime":"2026-01-22T12:00:00","DurationHours":3,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"技術検討（時間変更済）","EventId":"ev010","StartDateTime":"2025-12-10T09:00:00","EndDateTime":"2025-12-10T10:30:00","DurationHours":1.5,"ProjectCode":"proj_c","ProjectName":"プロジェクトC","Status":"Active"},
+  {"Title":"キックオフ","EventId":"ev011","StartDateTime":"2025-09-10T10:00:00","EndDateTime":"2025-09-10T12:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"開始会議","EventId":"ev012","StartDateTime":"2025-04-03T10:00:00","EndDateTime":"2025-04-03T11:00:00","DurationHours":1,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"未分類ミーティング","EventId":"ev013","StartDateTime":"2026-03-13T15:00:00","EndDateTime":"2026-03-13T16:00:00","DurationHours":1,"ProjectCode":"","ProjectName":"","Status":"Active"},
+  {"Title":"前年度 報告","EventId":"ev014","StartDateTime":"2025-03-20T10:00:00","EndDateTime":"2025-03-20T12:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"前年度 定例","EventId":"ev015","StartDateTime":"2025-01-15T14:00:00","EndDateTime":"2025-01-15T15:00:00","DurationHours":1,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Active"},
+  {"Title":"前年度 キックオフ","EventId":"ev016","StartDateTime":"2024-05-01T09:00:00","EndDateTime":"2024-05-01T11:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"}
+];
+const PROJECTS = /* PROJECTS_DATA_JSON */[
+  {"Title":"プロジェクトA","ProjectCode":"proj_a","Color":"#FF6384","PlannedHours":100,"IsActive":true},
+  {"Title":"プロジェクトB","ProjectCode":"proj_b","Color":"#36A2EB","PlannedHours":80,"IsActive":true},
+  {"Title":"プロジェクトC","ProjectCode":"proj_c","Color":"#FFCE56","PlannedHours":60,"IsActive":true}
+];
+const GENERATED_AT = "/* GENERATED_AT */2026-03-14T06:00:00Z";
+
+// ══════════════════════════════════════════════
+//  Fiscal Year Utilities (Apr 1 – Mar 31)
+// ══════════════════════════════════════════════
+function getFY(d){const dt=new Date(d),m=dt.getMonth();return m>=3?dt.getFullYear():dt.getFullYear()-1;}
+function getFYStart(fy){return new Date(fy,3,1);}
+function getFYEnd(fy){return new Date(fy+1,2,31,23,59,59,999);}
+function getFYLabel(fy){return fy+'年度';}
+function getFYMonths(fy){const r=[];for(let i=0;i<12;i++){const m=new Date(fy,3+i,1);r.push(m.getFullYear()+'/'+String(m.getMonth()+1).padStart(2,'0'));}return r;}
+function fmtDate(d){return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
+
+const projectMap={};PROJECTS.forEach(p=>{projectMap[p.ProjectCode]=p;});
+// Active logs only (Cancelled excluded from calculations)
+const ACTIVE_LOGS=WORK_LOGS.filter(l=>(l.Status||'Active')!=='Cancelled');
+
+// ── Unclassified warning ──
+const unclassified=ACTIVE_LOGS.filter(l=>!l.ProjectCode);
+if(unclassified.length>0){
+  const wb=document.getElementById('warnBar');
+  wb.textContent='\u26A0 '+unclassified.length+'件の未分類予定があります。Outlookでカテゴリを設定してください。';
+  wb.classList.add('show');
+}
+
+// ── FY selector ──
+const allFYs=[...new Set(WORK_LOGS.map(l=>getFY(l.StartDateTime)))].sort();
+const currentFY=getFY(new Date());
+if(!allFYs.includes(currentFY))allFYs.push(currentFY);allFYs.sort();
+let selectedFY=currentFY;
+
+const fySelect=document.getElementById('fySelect');
+allFYs.forEach(fy=>{const o=document.createElement('option');o.value=fy;o.textContent=getFYLabel(fy)+' ('+fy+'/4〜'+(fy+1)+'/3)';if(fy===currentFY)o.selected=true;fySelect.appendChild(o);});
+
+function onFYChange(){selectedFY=parseInt(fySelect.value);renderAll();}
+
+// ── Helpers ──
+function filterByFY(logs,fy){const s=getFYStart(fy),e=getFYEnd(fy);return logs.filter(l=>{const d=new Date(l.StartDateTime);return d>=s&&d<=e;});}
+
+function getRange(period,fy){
+  const now=new Date();
+  if(period==='week'){const day=now.getDay(),diff=day===0?6:day-1,s=new Date(now);s.setDate(now.getDate()-diff);s.setHours(0,0,0,0);return{start:s,end:now};}
+  if(period==='month'){return{start:new Date(now.getFullYear(),now.getMonth(),1),end:now};}
+  return{start:getFYStart(fy),end:getFYEnd(fy)};
+}
+
+function filterLogsPeriod(period){
+  const fyLogs=filterByFY(ACTIVE_LOGS,selectedFY);
+  if(period==='fiscal')return fyLogs;
+  const{start,end}=getRange(period);
+  return fyLogs.filter(l=>{const d=new Date(l.StartDateTime);return d>=start&&d<=end;});
+}
+
+// ══════════════════════════════════════════════
+//  Render All
+// ══════════════════════════════════════════════
+function renderAll(){
+  document.getElementById('fyBadge').textContent=getFYLabel(selectedFY);
+  document.getElementById('fyRange').textContent=fmtDate(getFYStart(selectedFY))+' 〜 '+fmtDate(getFYEnd(selectedFY));
+  document.getElementById('tabFiscal').textContent='今年度 ('+getFYLabel(selectedFY)+')';
+  document.getElementById('progressFyLabel').textContent=getFYLabel(selectedFY);
+  document.getElementById('logFyLabel').textContent='全期間';
+  try{const d=new Date(GENERATED_AT.replace('/* GENERATED_AT */',''));if(!isNaN(d)){const j=new Date(d.getTime()+9*3600000);document.getElementById('generatedAt').textContent='最終更新: '+j.toISOString().replace('T',' ').substring(0,16)+' JST';}}catch(e){}
+
+  renderPie(document.querySelector('.period-tab.active')?.dataset.period||'fiscal');
+  renderBar(document.getElementById('barSelector').value);
+  renderProgress();
+  renderLogTable();
+}
+
+// ── ① Pie with period tabs (week/month/fiscal year) ──
+let pieChart=null;
+function renderPie(period){
+  const logs=filterLogsPeriod(period);
+  const totals={};logs.forEach(l=>{if(l.ProjectCode)totals[l.ProjectCode]=(totals[l.ProjectCode]||0)+Number(l.DurationHours);});
+  const labels=[],data=[],colors=[];
+  PROJECTS.filter(p=>p.IsActive).forEach(p=>{const h=Math.round((totals[p.ProjectCode]||0)*100)/100;if(h>0){labels.push(p.Title);data.push(h);colors.push(p.Color||'#ccc');}});
+  const total=data.reduce((a,b)=>a+b,0);
+  const tbody=document.getElementById('pieLegendBody');tbody.innerHTML='';
+  labels.forEach((l,i)=>{const pct=total>0?((data[i]/total)*100).toFixed(1):'0.0';const tr=document.createElement('tr');tr.innerHTML='<td style="display:flex;align-items:center"><span class="color-dot" style="background:'+colors[i]+'"></span>'+l+'</td><td>'+data[i].toFixed(1)+'h</td><td>'+pct+'%</td>';tbody.appendChild(tr);});
+  document.getElementById('pieTotalHours').textContent=Math.round(total*100)/100+'h';
+  const ctx=document.getElementById('pieChart').getContext('2d');
+  if(pieChart)pieChart.destroy();
+  if(data.length===0){ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.font='14px Segoe UI';ctx.fillStyle='#aaa';ctx.textAlign='center';ctx.fillText('データなし',ctx.canvas.width/2,120);return;}
+  pieChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=c.parsed,pct=((v/total)*100).toFixed(1);return ' '+c.label+': '+v+'h ('+pct+'%)'}}}}}});
+}
+document.querySelectorAll('.period-tab').forEach(b=>{b.addEventListener('click',function(){document.querySelectorAll('.period-tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');renderPie(this.dataset.period);});});
+
+// ── ② Bar with dropdown selector ──
+let barChart=null;
+function getWeekLabel(date){const d=new Date(date),day=d.getDay(),diff=day===0?6:day-1,mon=new Date(d);mon.setDate(d.getDate()-diff);return String(mon.getMonth()+1).padStart(2,'0')+'/'+String(mon.getDate()).padStart(2,'0')+'週';}
+function getMonthKey(date){const d=new Date(date);return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0');}
+
+function buildBarData(mode){
+  if(mode==='week'){
+    const now=new Date(),buckets={},order=[];
+    for(let i=7;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i*7);const k=getWeekLabel(d);if(!buckets[k]){buckets[k]={};order.push(k);}}
+    ACTIVE_LOGS.forEach(l=>{if(!l.ProjectCode)return;const k=getWeekLabel(l.StartDateTime);if(buckets[k])buckets[k][l.ProjectCode]=(buckets[k][l.ProjectCode]||0)+Number(l.DurationHours);});
+    return{labels:order,datasets:PROJECTS.filter(p=>p.IsActive).map(p=>({label:p.Title,data:order.map(k=>Math.round((buckets[k][p.ProjectCode]||0)*100)/100),backgroundColor:p.Color}))};
+  }
+  if(mode==='fiscal_month'){
+    const months=getFYMonths(selectedFY),buckets={};months.forEach(m=>{buckets[m]={};});
+    filterByFY(ACTIVE_LOGS,selectedFY).forEach(l=>{if(!l.ProjectCode)return;const k=getMonthKey(l.StartDateTime);if(buckets[k])buckets[k][l.ProjectCode]=(buckets[k][l.ProjectCode]||0)+Number(l.DurationHours);});
+    return{labels:months.map(m=>parseInt(m.split('/')[1])+'月'),datasets:PROJECTS.filter(p=>p.IsActive).map(p=>({label:p.Title,data:months.map(k=>Math.round((buckets[k][p.ProjectCode]||0)*100)/100),backgroundColor:p.Color}))};
+  }
+  if(mode==='fiscal_year'){
+    const fyBuckets={},fyOrder=[];
+    ACTIVE_LOGS.forEach(l=>{if(!l.ProjectCode)return;const fy=getFYLabel(getFY(l.StartDateTime));if(!fyBuckets[fy]){fyBuckets[fy]={};fyOrder.push(fy);}fyBuckets[fy][l.ProjectCode]=(fyBuckets[fy][l.ProjectCode]||0)+Number(l.DurationHours);});
+    fyOrder.sort();
+    return{labels:fyOrder,datasets:PROJECTS.filter(p=>p.IsActive).map(p=>({label:p.Title,data:fyOrder.map(fy=>Math.round((fyBuckets[fy][p.ProjectCode]||0)*100)/100),backgroundColor:p.Color}))};
+  }
+  return{labels:[],datasets:[]};
+}
+function renderBar(mode){
+  const{labels,datasets}=buildBarData(mode);const ctx=document.getElementById('barChart').getContext('2d');
+  if(barChart)barChart.destroy();
+  barChart=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+'h'}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{callback:v=>v+'h'},title:{display:true,text:'工数（時間）'}}}}});
+}
+document.getElementById('barSelector').addEventListener('change',function(){renderBar(this.value);});
+
+// ── ③ Progress bars ──
+function renderProgress(){
+  const container=document.getElementById('progressContainer');container.innerHTML='';
+  const fyLogs=filterByFY(ACTIVE_LOGS,selectedFY);
+  const totals={};fyLogs.forEach(l=>{if(l.ProjectCode)totals[l.ProjectCode]=(totals[l.ProjectCode]||0)+Number(l.DurationHours);});
+  PROJECTS.filter(p=>p.IsActive).forEach(p=>{
+    const actual=Math.round((totals[p.ProjectCode]||0)*100)/100,planned=p.PlannedHours||0;
+    const ratio=planned>0?(actual/planned)*100:0,pctDisp=planned>0?ratio.toFixed(1):null,barPct=Math.min(ratio,100);
+    const extra=ratio>=100?'progress-over':ratio>=80?'progress-warn':'';
+    const div=document.createElement('div');div.className='progress-item';
+    div.innerHTML='<div class="progress-header"><span style="display:flex;align-items:center;gap:4px"><span class="color-dot" style="background:'+p.Color+'"></span>'+p.Title+'</span><span>'+actual+'h / '+(planned>0?planned+'h':'未設定')+(pctDisp?' <span style="color:'+(ratio>=100?'#e74c3c':ratio>=80?'#f39c12':'#27ae60')+'">('+pctDisp+'%)</span>':'')+'</span></div><div class="progress-bar-bg"><div class="progress-bar-fill '+extra+'" style="width:'+barPct+'%;'+(extra?'':'background:'+p.Color)+'"></div></div>';
+    container.appendChild(div);
+  });
+}
+
+// ── ④ Log table ──
+function renderLogTable(){
+  const tbody=document.getElementById('logTableBody');tbody.innerHTML='';
+  const sorted=[...WORK_LOGS].sort((a,b)=>new Date(b.StartDateTime)-new Date(a.StartDateTime));
+  sorted.forEach(log=>{
+    const d=new Date(log.StartDateTime),proj=projectMap[log.ProjectCode],color=proj?proj.Color:'#999';
+    const pName=log.ProjectName||(proj?proj.Title:'')||'未分類';
+    const fy=getFYLabel(getFY(log.StartDateTime)),isCurrent=getFY(log.StartDateTime)===selectedFY;
+    const status=log.Status||'Active',isCancelled=status==='Cancelled';
+    const badge={'Active':'<span style="color:#27ae60;font-size:0.78rem">● 有効</span>','Updated':'<span style="color:#2980b9;font-size:0.78rem">✎ 更新済</span>','Cancelled':'<span style="color:#e74c3c;font-size:0.78rem">✕ 削除済</span>'}[status]||status;
+    const tr=document.createElement('tr');tr.setAttribute('style',isCancelled?'opacity:0.45':'');
+    tr.innerHTML='<td>'+fmtDate(d)+'</td><td>'+log.Title+'</td><td><span class="project-badge" style="background:'+(isCancelled?'#bbb':color)+'">'+pName+'</span></td><td>'+(isCancelled?'<s>':'')+Number(log.DurationHours).toFixed(1)+'h'+(isCancelled?'</s>':'')+'</td><td>'+badge+'</td><td style="color:'+(isCurrent?'#0078d4':'#aaa')+';font-size:0.8rem">'+fy+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+renderAll();
+</script>
+</body>
+</html>
