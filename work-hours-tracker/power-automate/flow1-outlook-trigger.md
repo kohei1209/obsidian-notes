@@ -40,6 +40,21 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 
 > 他者から招待された予定を承諾すると、このトリガーも発火する。
 
+> **⚠️ Outlook V3 トリガーの日付形式について（重要）**
+>
+> V3 トリガーの `start` / `end` は**単純な日付文字列ではなく、オブジェクト**で返される:
+> ```json
+> {
+>   "dateTime": "2026-03-10T09:00:00.0000000",
+>   "timeZone": "Tokyo Standard Time"
+> }
+> ```
+> そのため、日時の値を使うときは必ず **`?['dateTime']`** を付けてアクセスする:
+> - `triggerBody()?['start']?['dateTime']` → `"2026-03-10T09:00:00.0000000"`
+> - `triggerBody()?['start']` → **オブジェクトが返りエラーになる**
+>
+> 以降のステップではすべて `?['dateTime']` を付けた形で記載している。
+
 ---
 
 ## ステップ一覧
@@ -78,11 +93,12 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 - アクション名を `TotalMinutes` に変更する
 - 「入力」欄 → **「式」タブ** → 以下を入力して OK:
   ```
-  div(sub(ticks(triggerBody()?['end']),ticks(triggerBody()?['start'])),600000000)
+  div(sub(ticks(triggerBody()?['end']?['dateTime']),ticks(triggerBody()?['start']?['dateTime'])),600000000)
   ```
 
 > **式の意味**:
-> - `ticks()` で開始・終了日時をそれぞれ「tick 数」に変換
+> - `triggerBody()?['end']?['dateTime']` でオブジェクトから日時文字列を取り出す
+> - `ticks()` で日時文字列を「tick 数」に変換
 > - `sub()` で差を取る（＝所要時間の tick 数）
 > - `div(..., 600000000)` で分に変換（1分 = 6億 tick）
 > - `div()` は整数除算だが、通常の予定は分単位で終わるため問題ない
@@ -216,9 +232,9 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 |-----------|-----|------|
 | Title | `triggerBody()?['subject']` | 予定の件名 |
 | EventId | `triggerBody()?['id']` | Outlook イベントの一意 ID |
-| StartDateTime | `triggerBody()?['start']` | |
-| EndDateTime | `triggerBody()?['end']` | |
-| DurationHours | `variables('DurationHours')` | round 済み |
+| StartDateTime | `triggerBody()?['start']?['dateTime']` | **⚠️ `?['dateTime']` が必要** |
+| EndDateTime | `triggerBody()?['end']?['dateTime']` | **⚠️ `?['dateTime']` が必要** |
+| DurationHours | `variables('DurationHours')` | |
 | ProjectCode | `variables('MatchedProjectCode')` | マッチなしの場合は空文字 |
 | ProjectName | `variables('MatchedProjectName')` | マッチなしの場合は空文字 |
 | RecordedAt | `utcNow()` | |
@@ -239,7 +255,7 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 ✅ 工数を自動登録しました。
 
 📅 @{triggerBody()?['subject']}
-⏰ @{triggerBody()?['start']} 〜 @{triggerBody()?['end']}（@{variables('DurationHours')}h）
+⏰ @{formatDateTime(triggerBody()?['start']?['dateTime'], 'yyyy/MM/dd HH:mm')} 〜 @{formatDateTime(triggerBody()?['end']?['dateTime'], 'HH:mm')}（@{variables('DurationHours')}h）
 📁 @{variables('MatchedProjectName')}
 ```
 
@@ -248,10 +264,13 @@ Outlook で以下のカテゴリを作成する（色は自由）:
 ⚠️ 工数を「未分類」で登録しました。
 
 📅 @{triggerBody()?['subject']}
-⏰ @{triggerBody()?['start']} 〜 @{triggerBody()?['end']}（@{variables('DurationHours')}h）
+⏰ @{formatDateTime(triggerBody()?['start']?['dateTime'], 'yyyy/MM/dd HH:mm')} 〜 @{formatDateTime(triggerBody()?['end']?['dateTime'], 'HH:mm')}（@{variables('DurationHours')}h）
 
 Outlookでカテゴリを設定するか、SharePoint WorkHoursLog でプロジェクトを手動編集してください。
 ```
+
+> **通知の日時表示**: `formatDateTime()` で `2026/03/10 09:00 〜 10:30` のように
+> 読みやすい形式で表示する。`?['dateTime']` を付けないとオブジェクトがそのまま表示される。
 
 > 通知の条件分岐: `equals(variables('MatchedProjectCode'), '')` で判定
 
