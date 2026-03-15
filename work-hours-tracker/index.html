@@ -101,7 +101,7 @@
 
 <script>
 // ══════════════════════════════════════════════
-//  DATA — Power Automate replaces these via concat()
+//  DATA — Power Automate replaces placeholders via replace()
 //  Status-based: updates overwrite the same record (Status=Active),
 //  deletions mark Status=Cancelled. HTML filters out Cancelled logs.
 // ══════════════════════════════════════════════
@@ -121,7 +121,8 @@ const WORK_LOGS = /* LOGS_DATA_JSON */[
   {"Title":"未分類ミーティング","EventId":"ev013","StartDateTime":"2026-03-13T15:00:00","EndDateTime":"2026-03-13T16:00:00","DurationHours":1,"ProjectCode":"","ProjectName":"","Status":"Active"},
   {"Title":"前年度 報告","EventId":"ev014","StartDateTime":"2025-03-20T10:00:00","EndDateTime":"2025-03-20T12:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
   {"Title":"前年度 定例","EventId":"ev015","StartDateTime":"2025-01-15T14:00:00","EndDateTime":"2025-01-15T15:00:00","DurationHours":1,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Active"},
-  {"Title":"前年度 キックオフ","EventId":"ev016","StartDateTime":"2024-05-01T09:00:00","EndDateTime":"2024-05-01T11:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"}
+  {"Title":"前年度 キックオフ","EventId":"ev016","StartDateTime":"2024-05-01T09:00:00","EndDateTime":"2024-05-01T11:00:00","DurationHours":2,"ProjectCode":"proj_a","ProjectName":"プロジェクトA","Status":"Active"},
+  {"Title":"キャンセルされた会議","EventId":"ev017","StartDateTime":"2026-03-14T10:00:00","EndDateTime":"2026-03-14T11:00:00","DurationHours":1,"ProjectCode":"proj_b","ProjectName":"プロジェクトB","Status":"Cancelled"}
 ];
 const PROJECTS = /* PROJECTS_DATA_JSON */[
   {"Title":"プロジェクトA","ProjectCode":"proj_a","Color":"#FF6384","PlannedHours":100,"IsActive":true},
@@ -140,15 +141,18 @@ function getFYLabel(fy){return fy+'年度';}
 function getFYMonths(fy){const r=[];for(let i=0;i<12;i++){const m=new Date(fy,3+i,1);r.push(m.getFullYear()+'/'+String(m.getMonth()+1).padStart(2,'0'));}return r;}
 function fmtDate(d){return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
 
-const projectMap={};PROJECTS.forEach(p=>{projectMap[p.ProjectCode]=p;});
+const projectMap={};PROJECTS.forEach(p=>{if(p.ProjectCode)projectMap[p.ProjectCode]=p;});
+// Normalize Status: handle both string ("Active") and SharePoint Choice object ({"Value":"Active"})
+function getStatus(s){if(!s)return'Active';if(typeof s==='object'&&s.Value)return s.Value;return String(s);}
+WORK_LOGS.forEach(l=>{l.Status=getStatus(l.Status);});
 // Active logs only (Cancelled excluded from calculations)
-const ACTIVE_LOGS=WORK_LOGS.filter(l=>(l.Status||'Active')!=='Cancelled');
+const ACTIVE_LOGS=WORK_LOGS.filter(l=>l.Status!=='Cancelled');
 
 // ── Unclassified warning ──
 const unclassified=ACTIVE_LOGS.filter(l=>!l.ProjectCode);
 if(unclassified.length>0){
   const wb=document.getElementById('warnBar');
-  wb.textContent='\u26A0 '+unclassified.length+'件の未分類予定があります。Outlookでカテゴリを設定してください。';
+  wb.textContent='\u26A0 '+unclassified.length+'件の未分類予定があります。Outlookでカテゴリを設定するか、SharePoint WorkHoursLog でプロジェクトを手動編集してください。';
   wb.classList.add('show');
 }
 
